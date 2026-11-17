@@ -90,6 +90,33 @@ The project is being developed, compiled and tested
 entirely on an Android smartphone using Termux.
 
 No desktop computer involved in the current workflow.
+## Latest Development Update — November 17, 2026
+
+The original game startup has now reached
+**23,228 kernel calls** on native ARM64.
+
+### Recent achievements
+
+- Fixed incorrect interruption of infinite waits.
+- Implemented functional XAM notification queues.
+- Passed 124 thread-related checks.
+- Passed 41 notification-related checks.
+- Full local regression suite passed.
+- Filesystem, callbacks and synchronization validated
+  by the current test suite.
+
+### Current status
+
+- Native game code execution: Working
+- Original game resource access: Working
+- Engine initialization: In progress
+- Graphics rendering: Not yet
+- Gameplay: Not yet
+
+The next milestone is advancing engine initialization
+towards the first rendered frame.
+
+Development continues.
 
 ## Follow the Development
 
