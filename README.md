@@ -432,8 +432,6 @@ legal copy of the original game.
 
 <div align="center">
 
-# AFRICA. IN YOUR POCKET.
-
 ### 24,839 Calls. One Step Closer.
 
 ![Development](https://img.shields.io/badge/Development-Ongoing-success?style=for-the-badge)
