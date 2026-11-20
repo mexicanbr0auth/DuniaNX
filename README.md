@@ -9,7 +9,7 @@
 ![Android](https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![ARM64](https://img.shields.io/badge/Architecture-ARM64-0078D4?style=for-the-badge)
 ![Mali](https://img.shields.io/badge/GPU-Mali_First-FF9800?style=for-the-badge)
-![Vulkan](https://img.shields.io/badge/Vulkan-Planned-AC162C?style=for-the-badge&logo=vulkan)
+![Vulkan](https://img.shields.io/badge/Vulkan-Partial_Backend-AC162C?style=for-the-badge&logo=vulkan)
 ![Status](https://img.shields.io/badge/Status-Active_Development-yellow?style=for-the-badge)
 
 ![GitHub Stars](https://img.shields.io/github/stars/mexicanbr0auth/DuniaNX?style=flat-square)
@@ -24,7 +24,9 @@
 > [!IMPORTANT]
 > DuniaNX is currently under active development.
 > Original game code is already executing natively on ARM64.
-> Full boot, rendering and gameplay have not yet been achieved.
+> Original startup draw commands now execute offscreen through Vulkan.
+> A private Android developer preview has been tested on real Mali hardware.
+> No complete game frame, main menu or gameplay has been achieved.
 > No public playable APK is currently available.
 
 ## About
@@ -42,7 +44,7 @@ to execute recompiled game code directly on mobile hardware.
 - Native ARM64 execution.
 - Static PowerPC recompilation.
 - Custom Xbox 360 compatibility runtime.
-- Planned Vulkan graphics backend.
+- Partial Vulkan graphics backend with verified offscreen rendering.
 - Mali-first development.
 - No Windows compatibility layer.
 - AI-assisted development.
@@ -57,75 +59,84 @@ to execute recompiled game code directly on mobile hardware.
 | Recompiled game functions | **92,270** |
 | Original platform imports | **274** |
 | Shaders translated to HLSL | **10,223** |
-| Startup import calls reached | **24,839** |
-| Latest native verification checks | **19,485 passed** |
-| Thread verification checks | **124 passed** |
-| Notification verification checks | **41 passed** |
-| Full local regression suite | **PASSED** |
-| First rendered frame | Pending |
-| Playable build | Unavailable |
+| Startup calls in Android preview v0.6 | **2,525,075** |
+| GPU command ring submissions completed | **15** |
+| GPU packets processed | **948** |
+| Original offscreen draws executed | **5** |
+| EDRAM resolves completed | **4** |
+| Shader load operations | **20** |
+| Latest graphics integration checks | **4,963,744 passed** |
+| First presented game frame | Pending (0) |
+| Private Android diagnostic APK | **v0.6-dev — device-tested** |
+| Public playable build | Unavailable |
 
 </div>
 
 ## Latest Development Update
 
-### November 17, 2026
+### November 20, 2026
 
-The original game startup has advanced to
-**24,839 import calls** on native ARM64.
+DuniaNX now executes over **2.5 million runtime import calls**
+inside a standalone Android application, with a partial Vulkan
+backend running on a Mali-G57 MC2 GPU (Vulkan 1.3.303).
 
-Recent development has focused on recovering original
-game callbacks, improving runtime compatibility and
-validating native execution.
+Developer Preview v0.6 reproduces the latest native startup
+milestone (boot 193) outside Termux. Both EDRAM rendering bins
+complete their original command sequences.
 
 ### Recent Achievements
 
-- Recovered native field-access callbacks.
-- Recovered string-related callbacks.
-- Recovered indexed-access callbacks.
-- Fixed incorrect interruption of infinite waits.
-- Implemented functional XAM notification queues.
-- Improved thread synchronization.
-- Improved filesystem compatibility.
-- Implemented aligned direct disk I/O.
-- Passed 19,485 native verification checks.
-- Passed the complete local regression suite.
+- Original Xenos command processing, including indirect buffers and bin predicates.
+- Verified Vulkan offscreen rasterization of original startup rectangle draws.
+- Restricted color, depth and stencil handling, including 4x MSAA.
+- Four EDRAM resolves with 2x MSAA source layout: constrained uniform data copied into guest tiled textures.
+- Left and right halves of a 1280 × 696 texture covered by the resolve path.
+- Original BC1 texture decoding, Vulkan upload and verified 65,536-byte readback (128 × 128 RGBA).
+- Signed ARM64 diagnostic APK, tested on the Android device with user-provided game files.
+- 4,963,744 graphics integration checks passed, including pixel, address and memory assertions.
+
+The current startup stops at the unimplemented
+`VdGetSystemCommandBuffer` import. The next objective is
+system command buffer support, frontbuffer handling and
+the presentation path through `VdSwap`.
 
 ### Current Validation Summary
 
 ```text
-DuniaNX Native Runtime
+DuniaNX Developer Preview v0.6-dev
 ========================================
 Architecture............. ARM64
 Target Platform.......... Android
 Original Platform........ Xbox 360
-GPU Priority............. Mali
+GPU...................... Mali-G57 MC2
+Vulkan API............... 1.3.303
 
-Recompiled Functions..... 92270
-Translated Shaders....... 10223
-Startup Import Calls..... 24839
+Startup Import Calls..... 2525075
+Completed Rings.......... 15
+GPU Packets.............. 948
+Offscreen Draws.......... 5
+EDRAM Resolves........... 4
+Shader Loads............. 20
+Inert Draws.............. 24
+Presented Game Frames.... 0
 
-Native Checks............ 19485 PASSED
-Thread Checks............ 124 PASSED
-Notification Checks...... 41 PASSED
+Graphics Integration..... 4963744 checks passed
+Full Regression.......... RE-RUN PENDING
 
-Filesystem Tests......... PASSED
-Callback Tests........... PASSED
-Thread Tests............. PASSED
-Notification Tests....... PASSED
-Full Regression.......... PASSED
-
+Current Blocker.......... VdGetSystemCommandBuffer
 Engine Initialization.... IN PROGRESS
-Full Game Boot........... NOT REACHED
-Graphics Rendering....... NOT REACHED
+Main Menu................ NOT REACHED
 Gameplay................. NOT AVAILABLE
-
-Status................... ACTIVE DEVELOPMENT
 ========================================
 ```
 
-This is a development report summary, not an unmodified
-terminal capture.
+The runtime figures above are from the device-tested Android
+preview. Integration checks are from separate local tests,
+not millions of completed renders. The last full regression
+pass predates these graphics changes; a new full run is pending.
+
+Read the [November 20 development log](devlogs/2026-11-20.md)
+for further details.
 
 ## Startup Evolution
 
@@ -137,20 +148,15 @@ terminal capture.
 | Network initialization | 7,607 |
 | Direct I/O and scheduler improvements | 9,043 |
 | Thread and XAM notification improvements | 23,228 |
-| Extended native callback recovery | **24,839** |
-
-```mermaid
-xychart-beta
-    title "DuniaNX Startup Evolution"
-    x-axis ["Initial", "Runtime", "XAM", "Network", "I/O", "Threads", "Current"]
-    y-axis "Runtime Calls" 0 --> 30000
-    line [2, 34, 7561, 7607, 9043, 23228, 24839]
-```
+| Extended native callback recovery (Nov 17) | 24,839 |
+| Native boot 193 (Nov 19) | 2,544,008 |
+| Android preview v0.6 (Nov 20) | **2,525,075** |
 
 > [!NOTE]
-> Runtime calls include repeated operations.
-> These numbers do not represent unique implemented
-> functions or a percentage of game completion.
+> Runtime calls include repeated operations and vary with timing.
+> They are not unique implemented functions, a measure of frame rate
+> or a percentage of game completion. Progress is measured by
+> verified behavior and the startup blockers resolved.
 
 ## Technical Architecture
 
@@ -165,11 +171,12 @@ flowchart TD
     D --> G[Filesystem]
     D --> H[XAM Services]
 
-    D -. Planned .-> I[Vulkan Backend]
+    D --> I[Partial Vulkan Backend]
     D -. Planned .-> J[Audio Backend]
     D -. Planned .-> K[Input System]
 
-    I -. Planned .-> L[Android Display]
+    I --> M[Offscreen Draws and Restricted EDRAM Resolves]
+    M -. Planned .-> L[Android Display]
 
     style C fill:#238636,color:#ffffff
     style D fill:#1f6feb,color:#ffffff
@@ -206,11 +213,18 @@ flowchart TD
 - [x] Translation of 10,223 shaders to HLSL.
 - [ ] SPIR-V shader compilation.
 - [ ] Shader behavior validation.
-- [ ] Vulkan graphics backend.
-- [ ] GPU command processing.
-- [ ] Texture management.
-- [ ] Render-target management.
-- [ ] First rendered frame.
+- [x] Initial Vulkan backend on real Mali hardware.
+- [x] First original offscreen raster draw.
+- [ ] General Vulkan graphics backend.
+- [x] Initial GPU command processing.
+- [ ] Complete GPU command processing.
+- [x] Original texture decoding and GPU upload/readback.
+- [ ] General texture management.
+- [x] Restricted render-target and tiled EDRAM resolves.
+- [ ] General render-target management.
+- [ ] System command buffer and frontbuffer handling.
+- [ ] Vulkan surface presentation.
+- [ ] First presented full game frame.
 - [ ] Main menu rendering.
 - [ ] Mali GPU optimization.
 
@@ -227,12 +241,13 @@ flowchart TD
 
 ### Phase 05 — Android Release
 
-- [ ] Native Android launcher.
-- [ ] Original game file selection.
-- [ ] Game resource validation.
+- [x] Native Android diagnostic launcher.
+- [x] Original game file selection.
+- [x] Initial game resource validation.
 - [ ] Graphics configuration.
-- [ ] Android APK packaging.
-- [ ] Device compatibility testing.
+- [x] Signed Android diagnostic APK packaging.
+- [x] Initial testing on one Mali Android device.
+- [ ] Broader device compatibility testing.
 - [ ] Public experimental release.
 
 ## Mali First
@@ -246,7 +261,7 @@ equipped with Mali graphics processors.
 
 ### Planned Graphics Features
 
-- Vulkan rendering.
+- Full Vulkan rendering and display presentation.
 - Mobile-oriented shader optimization.
 - Configurable rendering resolution.
 - Efficient memory management.
@@ -254,7 +269,7 @@ equipped with Mali graphics processors.
 - Broader GPU compatibility.
 
 Performance targets and minimum hardware requirements
-will be established after rendering and gameplay
+will be established after full frame presentation and gameplay
 become available.
 
 Mali-first does not mean Mali-only.
@@ -307,10 +322,10 @@ compatibility and original engine initialization.
 <details>
 <summary><b>Does it render graphics?</b></summary>
 
-Not yet.
-
-The first rendered frame remains one of the most
-important upcoming milestones.
+Partially. Original startup rectangle commands are executed
+offscreen on Vulkan, and restricted EDRAM resolves are working.
+The texture diagnostic is not a game frame.
+A complete presented frame and the main menu are still pending.
 
 </details>
 
@@ -328,8 +343,8 @@ of traditional full-system emulation.
 
 Mali GPUs are the primary development target.
 
-Actual compatibility will be established through
-testing once the graphics backend is operational.
+The partial backend has been tested on Mali-G57 MC2
+with Vulkan 1.3.303. Wider compatibility is not established.
 
 </details>
 
@@ -353,7 +368,9 @@ copy of the original game.
 <details>
 <summary><b>Is there an APK available?</b></summary>
 
-No public playable APK is currently available.
+A private signed developer preview (v0.6-dev) has been
+tested directly on Android. It is a diagnostic build, not
+a playable port. No public playable APK is available.
 
 </details>
 
@@ -390,6 +407,9 @@ When it's ready.
 This repository documents major development milestones,
 runtime improvements, validation results and future
 rendering progress.
+
+- [November 20, 2026 — Android preview and Vulkan progress](devlogs/2026-11-20.md)
+- [November 17, 2026 — early runtime milestone](devlogs/2026-11-17.md)
 
 Development reports reflect the current state
 of the project and do not imply complete
@@ -432,7 +452,7 @@ legal copy of the original game.
 
 <div align="center">
 
-### 24,839 Calls. One Step Closer.
+### 2.5 Million Calls. One Step Closer.
 
 ![Development](https://img.shields.io/badge/Development-Ongoing-success?style=for-the-badge)
 ![Release](https://img.shields.io/badge/Release-When_Ready-black?style=for-the-badge)
