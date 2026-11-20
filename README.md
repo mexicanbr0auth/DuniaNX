@@ -22,12 +22,14 @@
 </div>
 
 > [!IMPORTANT]
-> DuniaNX is currently under active development.
-> Original game code is already executing natively on ARM64.
-> Original startup draw commands now execute offscreen through Vulkan.
-> A private Android developer preview has been tested on real Mali hardware.
-> No complete game frame, main menu or gameplay has been achieved.
-> No public playable APK is currently available.
+> **Still experimental; not playable.** The original Far Cry 2 executable
+> executes via static PowerPC-to-ARM64 recompilation. A restricted Vulkan
+> backend on a Mali-G57 MC2 GPU now renders and captures the **real game's
+> animated loading indicator** in a Termux:X11 development viewer.
+> This is *not* an integrated Android game swapchain or a completed main menu.
+> The private signed Android diagnostic APK (v0.6-dev) is an earlier milestone;
+> the latest Termux/X11 runtime changes have **not** been released as an APK.
+> No public playable APK, game assets, or proprietary game code are distributed.
 
 ## About
 
@@ -44,7 +46,7 @@ to execute recompiled game code directly on mobile hardware.
 - Native ARM64 execution.
 - Static PowerPC recompilation.
 - Custom Xbox 360 compatibility runtime.
-- Partial Vulkan graphics backend with verified offscreen rendering.
+- Partial Vulkan graphics backend with verified original loading-frame capture.
 - Mali-first development.
 - No Windows compatibility layer.
 - AI-assisted development.
@@ -54,89 +56,95 @@ to execute recompiled game code directly on mobile hardware.
 
 <div align="center">
 
-| Component | Result |
+| Component | Verified result |
 |:---|---:|
-| Recompiled game functions | **92,270** |
-| Original platform imports | **274** |
-| Shaders translated to HLSL | **10,223** |
-| Startup calls in Android preview v0.6 | **2,525,075** |
-| GPU command ring submissions completed | **15** |
-| GPU packets processed | **948** |
-| Original offscreen draws executed | **5** |
-| EDRAM resolves completed | **4** |
-| Shader load operations | **20** |
-| Latest graphics integration checks | **4,963,744 passed** |
-| First presented game frame | Pending (0) |
-| Private Android diagnostic APK | **v0.6-dev — device-tested** |
-| Public playable build | Unavailable |
+| Statically recompiled game functions | **92,270** |
+| Original platform imports mapped | **274** |
+| Xenos shader programs translated to HLSL | **10,223** |
+| Historical private Android APK v0.6-dev | **2,525,075 runtime imports** |
+| Boot 264 (Termux/X11, completed at watchdog) | **216 frontbuffer snapshots / 147 distinct hashes** |
+| Boot 266 (Termux/X11, completed at watchdog) | **247 snapshots / 158 distinct hashes** |
+| Boot 266 original BC3 textured draws | **23,520** |
+| Original UI shaders compared on actual draws (boot 263) | **16 draws; 68,252 / 68,252 pixels match** |
+| Vulkan rectangle/depth integration validation | **11,293,560 checks passed** |
+| Vulkan color-band validation | **923,052 checks passed** |
+| Integrated game swapchain / main menu | **Not yet** |
+| Public playable build | **Unavailable** |
 
 </div>
 
+Snapshot counts are from the original game's guest frontbuffer as decoded by
+an **external X11 development capture viewer**. They are not native Android
+presentation frames, unique render operations, or evidence of a playable menu.
+Runtime import counts include repeated calls; test assertions are not FPS.
+Boot 266 ended at the nine-minute watchdog without a new confirmed PM4 error.
+
 ## Latest Development Update
 
-### November 20, 2026
+### November 20, 2026 — Native loading animation and Vulkan verification
 
-DuniaNX now executes over **2.5 million runtime import calls**
-inside a standalone Android application, with a partial Vulkan
-backend running on a Mali-G57 MC2 GPU (Vulkan 1.3.303).
+DuniaNX has moved beyond the older `VdGetSystemCommandBuffer` startup
+blocker. Original Xbox 360 GPU command buffers, the supported subset of
+Xenos PM4 draws, EDRAM operations and `VdSwap` now drive an authentic
+**animated Far Cry 2 loading indicator** rendered on the Mali-G57 MC2 GPU.
+A development-only Termux:X11 viewer presents copies of captured game
+frontbuffers; the game still has no integrated Android surface/swapchain.
 
-Developer Preview v0.6 reproduces the latest native startup
-milestone (boot 193) outside Termux. Both EDRAM rendering bins
-complete their original command sequences.
+### Verified milestones
 
-### Recent Achievements
+- **Boot 263:** ran original translated UI vertex/pixel shaders in a second
+  real Vulkan draw path for 16 captured UI draws. **All 68,252 tested pixels**
+  exactly matched the existing restricted renderer. This validates only those
+  captured draws, not every shader in the game.
+- **Boot 264:** produced 216 genuine guest-frontbuffer snapshots (147 distinct
+  hashes) and 20,592 BC3 draws; ended at the nine-minute watchdog without a
+  newly confirmed GPU command failure. The loading phase did not complete.
+- **Boot 265:** a CPU-thread execution stall after import 2,556,397; stopped
+  manually for diagnosis. More import calls are *not* always more progress.
+- **Boot 266:** recovered animated loading and continued beyond that stall.
+  The completed watchdog run produced 247 snapshots and 23,520 BC3 draws.
+  Native ARM64 PC sampling identified time spent in actual Vulkan rendering,
+  frontbuffer snapshots and waits, instead of assuming a PM4 fault.
+- **Readback optimization:** optional byte-complete row comparisons verified
+  all original output bytes. Both optimized and baseline modes passed
+  **11,293,560 rectangle/depth** and **923,052 color-band** checks.
+  Persistent Vulkan pipeline objects and an exact-byte BC3 cache are also
+  available behind experimental runtime flags.
 
-- Original Xenos command processing, including indirect buffers and bin predicates.
-- Verified Vulkan offscreen rasterization of original startup rectangle draws.
-- Restricted color, depth and stencil handling, including 4x MSAA.
-- Four EDRAM resolves with 2x MSAA source layout: constrained uniform data copied into guest tiled textures.
-- Left and right halves of a 1280 × 696 texture covered by the resolve path.
-- Original BC1 texture decoding, Vulkan upload and verified 65,536-byte readback (128 × 128 RGBA).
-- Signed ARM64 diagnostic APK, tested on the Android device with user-provided game files.
-- 4,963,744 graphics integration checks passed, including pixel, address and memory assertions.
+These advances are from **local native test builds in Termux**, not the
+previously device-tested private Android APK. The general-purpose GPU
+translator, completed Dunia Engine initialization, native game swapchain,
+main menu, audio and gameplay remain unfinished.
 
-The current startup stops at the unimplemented
-`VdGetSystemCommandBuffer` import. The next objective is
-system command buffer support, frontbuffer handling and
-the presentation path through `VdSwap`.
+See the [detailed native-loading development log](devlogs/2026-11-20-native-loading.md)
+and the [historical v0.6 Android preview log](devlogs/2026-11-20.md).
 
-### Current Validation Summary
+### Latest completed native diagnostic boot
 
 ```text
-DuniaNX Developer Preview v0.6-dev
-========================================
-Architecture............. ARM64
-Target Platform.......... Android
-Original Platform........ Xbox 360
-GPU...................... Mali-G57 MC2
-Vulkan API............... 1.3.303
-
-Startup Import Calls..... 2525075
-Completed Rings.......... 15
-GPU Packets.............. 948
-Offscreen Draws.......... 5
-EDRAM Resolves........... 4
-Shader Loads............. 20
-Inert Draws.............. 24
-Presented Game Frames.... 0
-
-Graphics Integration..... 4963744 checks passed
-Full Regression.......... RE-RUN PENDING
-
-Current Blocker.......... VdGetSystemCommandBuffer
-Engine Initialization.... IN PROGRESS
-Main Menu................ NOT REACHED
+DuniaNX — Termux/X11 native boot 266 (540s watchdog)
+==========================================================
+Target................... Xbox 360 Far Cry 2
+Native host.............. Android ARM64
+GPU...................... Mali-G57 MC2 / real Vulkan
+Runtime import calls..... 2,630,893
+Guest frontbuffer copies. 247 (158 distinct hashes)
+Original BC3 draws....... 23,520
+Original UI shader proof. 16 draws / 68,252 exact pixels (boot 263)
+Rectangle/depth tests.... 11,293,560 passed
+Color-band tests......... 923,052 passed
+X11 capture viewer....... Working (development only)
+Integrated game surface.. Not implemented
+Dunia initialization..... Incomplete
+Main menu................ NOT REACHED
 Gameplay................. NOT AVAILABLE
-========================================
+Public APK............... NOT AVAILABLE
+==========================================================
 ```
 
-The runtime figures above are from the device-tested Android
-preview. Integration checks are from separate local tests,
-not millions of completed renders. The last full regression
-pass predates these graphics changes; a new full run is pending.
-
-Read the [November 20 development log](devlogs/2026-11-20.md)
-for further details.
+Boot 267 is running separately as a new native readback-optimization test.
+The numbers above are fixed observations from local logs, not live counters.
+There is no verified gameplay FPS or completion percentage yet.
 
 ## Startup Evolution
 
@@ -151,6 +159,8 @@ for further details.
 | Extended native callback recovery (Nov 17) | 24,839 |
 | Native boot 193 (Nov 19) | 2,544,008 |
 | Android preview v0.6 (Nov 20) | **2,525,075** |
+| Native boot 264 at watchdog (Nov 20) | **2,624,922** |
+| Native boot 266 at watchdog (Nov 20) | **2,630,893** |
 
 > [!NOTE]
 > Runtime calls include repeated operations and vary with timing.
@@ -211,8 +221,10 @@ flowchart TD
 
 - [x] Original Xenos shader extraction.
 - [x] Translation of 10,223 shaders to HLSL.
-- [ ] SPIR-V shader compilation.
-- [ ] Shader behavior validation.
+- [x] Restricted SPIR-V shader compilation and validation.
+- [ ] Complete shader coverage and shader ABI verification.
+- [x] Original UI shader differential validation on 16 captured draws.
+- [ ] General shader behavior validation.
 - [x] Initial Vulkan backend on real Mali hardware.
 - [x] First original offscreen raster draw.
 - [ ] General Vulkan graphics backend.
@@ -222,11 +234,14 @@ flowchart TD
 - [ ] General texture management.
 - [x] Restricted render-target and tiled EDRAM resolves.
 - [ ] General render-target management.
-- [ ] System command buffer and frontbuffer handling.
-- [ ] Vulkan surface presentation.
+- [x] Restricted system command buffer / `VdSwap` / frontbuffer handling.
+- [ ] General GPU command and frontbuffer compatibility.
+- [x] Development-only X11 viewer for captured guest frontbuffers.
+- [ ] Integrated native Android Vulkan surface presentation.
 - [ ] First presented full game frame.
 - [ ] Main menu rendering.
-- [ ] Mali GPU optimization.
+- [x] Experimental Mali Vulkan pipeline reuse, BC3 cache, and readback verification.
+- [ ] Gameplay-oriented GPU performance and compatibility optimization.
 
 ### Phase 04 — Gameplay
 
@@ -322,19 +337,21 @@ compatibility and original engine initialization.
 <details>
 <summary><b>Does it render graphics?</b></summary>
 
-Partially. Original startup rectangle commands are executed
-offscreen on Vulkan, and restricted EDRAM resolves are working.
-The texture diagnostic is not a game frame.
-A complete presented frame and the main menu are still pending.
+Yes, partially. Original in-game loading frames are captured from
+the guest frontbuffer and shown in a separate Termux:X11 Vulkan viewer.
+This is actual game output, **not** a fake menu, but not direct/native game
+swapchain presentation either. The complete main menu remains pending.
 
 </details>
 
 <details>
 <summary><b>Is DuniaNX an emulator?</b></summary>
 
-DuniaNX uses static recompilation combined with
-a custom Xbox 360 compatibility runtime instead
-of traditional full-system emulation.
+DuniaNX uses static recompilation of the original PowerPC CPU code,
+combined with a custom Xbox 360 compatibility runtime. Xenos GPU commands
+are still translated to Vulkan at runtime, so **graphics compatibility
+translation remains part of the architecture**, rather than a fully native
+Dunia Engine Vulkan renderer. It is not full-system emulation.
 
 </details>
 
@@ -408,7 +425,8 @@ This repository documents major development milestones,
 runtime improvements, validation results and future
 rendering progress.
 
-- [November 20, 2026 — Android preview and Vulkan progress](devlogs/2026-11-20.md)
+- [November 20, 2026 — Native loading, original UI shaders, CPU/Vulkan profiling](devlogs/2026-11-20-native-loading.md)
+- [November 20, 2026 — Historical Android v0.6 preview](devlogs/2026-11-20.md)
 - [November 17, 2026 — early runtime milestone](devlogs/2026-11-17.md)
 
 Development reports reflect the current state
@@ -452,7 +470,7 @@ legal copy of the original game.
 
 <div align="center">
 
-### 2.5 Million Calls. One Step Closer.
+### Original Loading Frames. Native ARM64. The Journey Continues.
 
 ![Development](https://img.shields.io/badge/Development-Ongoing-success?style=for-the-badge)
 ![Release](https://img.shields.io/badge/Release-When_Ready-black?style=for-the-badge)
